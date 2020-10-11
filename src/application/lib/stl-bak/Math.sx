@@ -1,0 +1,19 @@
+package
+{
+    use namespace shockscript
+
+    [DontConstruct]
+
+    [Extern]
+
+    final class Math
+    {
+        native static function random():Number
+
+        native static function pow(a:Number, b:Number):Number
+
+        native static function min(...arguments:Number):Number
+
+        native static function max(...arguments:Number):Number
+    }
+}

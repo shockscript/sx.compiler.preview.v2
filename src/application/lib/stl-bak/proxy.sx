@@ -1,0 +1,8 @@
+package
+{
+    /**
+     * The <code>proxy</code> namespace lets you override the behavior of
+     * default ShockScript operations (such as retrieving and modifying properties).
+     */
+    namespace proxy = "http://shockscript.org/reference/proxy"
+}

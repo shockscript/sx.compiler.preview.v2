@@ -1,0 +1,121 @@
+package
+{
+    import shockscript.impl.*
+
+    /**
+     * The Dictionary class is an efficient ordered set of (_key_, _value_) pairs.
+     */
+
+    [DontInit]
+
+    [FFI]
+
+    class Dictionary.<K, V>
+    {
+        /**
+         * @params weakKeys Indicates if the dictionary keys are weak references.
+         */
+        native function Dictionary(weakKeys:Boolean = false)
+
+        /**
+         * Indicates the number of properties in the Dictionary.
+         * If set to 0, the Dictionary is emptied.
+         */
+        native function get length():ulong
+
+        native function set length(length)
+
+        native proxy function getProperty(key:K):V
+
+        native proxy function setProperty(key:K, value:V):void
+
+        native proxy function deleteProperty(key:K):Boolean
+
+        native proxy function hasProperty(key:K):Boolean
+
+        native final proxy function nextNameIndex(index:ulong):ulong
+
+        native final proxy function nextName(index:ulong):K
+
+        native final proxy function nextValue(index:ulong):V
+
+        /**
+         * Returns `true` if the Dictionary contains the given value.
+         */
+        function hasValue(value:V):Boolean
+        {
+            for each (var v:V in this)
+            {
+                if (v == value)
+                    return true
+            }
+            return false
+        }
+
+        /**
+         * Returns an iterator that yields Property pairs.
+         */
+        function get pairs():DictionaryPairs.<K, V>
+        {
+            return new DictionaryPairs.<K, V>(this)
+        }
+
+        /**
+         * Copies every property from the specified Dictionary.
+         */
+        function assign(dict:Dictionary.<K, V>):void
+        {
+            for (const {key, value} in dict.pairs)
+            {
+                this[key] = value
+            }
+        }
+    }
+
+    /**
+     * Property represents a pair (_key, _value_).
+     */
+
+    [Primitive]
+
+    final class Property.<K, V>
+    {
+        const key:K
+
+        const value:V
+    }
+}
+
+package shockscript.impl
+{
+    use namespace proxy
+
+    /**
+     * @private
+     */
+    final class DictionaryPairs.<K, V>
+    {
+        const dict:Dictionary.<K, V>
+
+        function DictionaryPairs(dict:Dictionary.<K, V>)
+        {
+            this.dict = dict
+        }
+
+        proxy function nextNameIndex(index:ulong):ulong
+        {
+            return dict.nextNameIndex(index)
+        }
+
+        proxy function nextName(index:ulong):Property.<K, V>
+        {
+            return nextValue(index)
+        }
+
+        proxy function nextValue(index:ulong):Property.<K, V>
+        {
+            --index
+            return {key: dict.nextName(index), value: dict.nextValue(index)}
+        }
+    }
+}

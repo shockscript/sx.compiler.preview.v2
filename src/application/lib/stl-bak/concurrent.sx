@@ -1,0 +1,32 @@
+package
+{
+    [DontInit]
+
+    [Extern]
+
+    final class Thread
+    {
+        native static function get currentThread():Thread
+
+        [Function(F="function():void")]
+
+        native function Thread(callback:F, name:String = "")
+
+        native function get name():?String
+    }
+
+    [DontInit]
+
+    [Extern]
+
+    final class Mutex
+    {
+        native function Mutex()
+
+        native function lock():void
+
+        native function tryLock():Boolean
+
+        native function unlock():void
+    }
+}

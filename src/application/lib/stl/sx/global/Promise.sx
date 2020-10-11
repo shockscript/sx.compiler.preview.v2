@@ -1,0 +1,6 @@
+package sx.global
+{
+    class Promise
+    {
+    }
+}

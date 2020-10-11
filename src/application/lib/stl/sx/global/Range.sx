@@ -1,0 +1,22 @@
+package sx.global
+{
+    [TypeConfig(primitive=true, dynamicInit=true)]
+    final class Range
+    {
+        const start:*;
+
+        const end:*;
+
+        const step:*;
+
+        function Range(start:* = 0, end:* = 0, step:* = undefined)
+        {
+            var type = isUndefined(start) ? Number : start.constructor;
+            this.start = type(start);
+            this.end = type(end);
+            if (step === undefined)
+                this.step = start < end ? type(1) : type(-1);
+            else this.step = step;
+        }
+    }
+}

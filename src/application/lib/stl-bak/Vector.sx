@@ -1,0 +1,393 @@
+package
+{
+    use namespace shockscript
+
+    /**
+     * The Vector class lets you access and manipulate a vector —
+     * an array whose elements all have the same data type.
+     *
+     * You can use the access operator <code>[]</code> to set or retrieve the
+     * value of a Vector element.
+     */
+
+    [DontInit]
+
+    [FFI]
+
+    class Vector.<E>
+    {
+        [FFI("new")]
+
+        native function Vector(length:uint = 0)
+
+        /**
+         * The range of valid indices available on the Vector.
+         */
+
+        [FFI("getlength")]
+
+        native final function get length():uint
+
+        [FFI("setlength")]
+
+        native final function set length(value)
+
+        [FFI("getproperty")]
+
+        final native proxy function getProperty(index:uint):E
+
+        [FFI("setproperty")]
+
+        final native proxy function setProperty(index:uint, value:E):void
+
+        [FFI("deleteproperty")]
+
+        final proxy function deleteProperty(index:uint):Boolean
+        {
+            if (!length)
+                return false
+            removeAt(index)
+            return true
+        }
+
+        final proxy function filter(callback:function(E):Boolean):Vector.<E>
+        {
+            return filter(function(value) callback(value))
+        }
+
+        [FFI("hasproperty")]
+
+        final proxy function hasProperty(value:E):Boolean
+        {
+            return indexOf(value) != -1
+        }
+
+        /**
+         * Removes the first element of the Vector and returns its value.
+         */
+
+        [FFI("shift")]
+
+        function shift():?E
+        {
+            if (!length)
+                return null
+            var v = this[0]
+            delete this[0]
+            return v
+        }
+
+        /**
+         * Removes the last element of the Vector and returns it.
+         */
+
+        [FFI("pop")]
+
+        function pop():?E
+        {
+            if (!length)
+                return null
+            var v = this[length - 1]
+            removeAt(length - 1)
+            return v
+        }
+
+        final proxy function nextNameIndex(index:uint):uint
+        {
+            return index < length ? index + 1 : 0
+        }
+
+        final proxy function nextValue(index:uint):E
+        {
+            return this[index - 1]
+        }
+
+        [FFI("indexof")]
+
+        function indexOf(value:E, from:uint = 0):int
+        {
+            for each (var i in Range.<uint>(from, length))
+                if (this[i] == value)
+                    return i
+            return -1
+        }
+
+        [FFI("lastindexof")]
+
+        function lastIndexOf(value:E, from:uint = 0):int
+        {
+            var i:int = -1,
+                j:int = from
+            for (;;)
+            {
+                j = indexOf(value, j)
+                if (j == -1)
+                    break
+                i = j
+            }
+            return i
+        }
+
+        [FFI("join")]
+
+        function join(sep:String = ""):String
+        {
+            var str = StringOutput()
+            if (length)
+            {
+                str.push(first)
+                for each (var i in Range.<uint>(1, length))
+                {
+                    str.push(sep)
+                    str.push(this[i])
+                }
+            }
+            return str.toString()
+        }
+
+        [FFI("concat")]
+
+        function concat(...arguments:Vector.<E>):Vector.<E>
+        {
+            var vector = Vector.<E>()
+            for each (var el in this)
+                vector.push(el)
+            for each (var vector2 in arguments)
+                for each (var el in this)
+                    vector.push(el)
+            return vector
+        }
+
+        [FFI("push")]
+
+        final native function push(...arguments:E):uint
+
+        [FFI("reverse")]
+
+        final function reverse():void
+        {
+            var cpy = slice(0)
+            var j:uint
+            for each (var i in Range.<int>(length - 1, 0, {step: -1}))
+                this[i] = cpy[j++]
+        }
+
+        /**
+         * Inserts elements at the beginning of the Vector.
+         */
+
+        [FFI("unshift")]
+
+        native function unshift(...values:E):uint
+
+        [FFI("splice")]
+
+        native function splice(pos:uint, num:uint):Vector.<E>
+
+        [FFI("insertat")]
+
+        native function insertAt(value:E, pos:uint):uint
+
+        [FFI("removeat")]
+
+        native function removeAt(pos:uint):uint
+
+        [FFI("sort")]
+
+        native function sort(callback:?function(E, E):Comparison = null, options:SortOptions = undefined):void
+
+        [FFI("filter")]
+
+        function filter(callback:function(E, uint, Vector.<E>):Boolean):Vector.<E>
+        {
+            var out:Vector.<E> = []
+            var i:uint = 0
+            for each (var value:E in this)
+            {
+                if (callback(value, i++, this))
+                    out.push(value)
+            }
+            return out
+        }
+
+        /**
+         * Returns the first element of the Vector.
+         */
+        final function get first():?E
+        {
+            return length ? this[0] : null
+        }
+
+        /**
+         * Returns the last element of the Vector.
+         */
+        final function get last():?E
+        {
+            return length ? this[this.length - 1] : null
+        }
+
+        [FFI("slice")]
+
+        function slice(from:int = 0, to:int = int.MAX_VALUE):Vector.<E>
+        {
+            if (from >= length)
+            {
+                return []
+            }
+            from = from < 0 ? length - from : from
+            to = to > length ? length : to < 0 ? length + to : to
+            if (from > to)
+            {
+                return []
+            }
+            var list:Vector.<E> = []
+            for (var i = from; i != to; ++i)
+            {
+                list.push(this[i])
+            }
+            return list
+        }
+
+        /**
+         * Executes a function on each item in the Vector.
+         *
+         * @param callback Function of signature `function(currentValue, index, vector)`.
+         */
+
+        [Function(F="function(E, uint, Vector.<E>):E")]
+
+        function forEach(callback:F):void
+        {
+            for (var i:uint = 0; i !== length; ++i)
+                callback(this[i], i, this)
+        }
+
+        /**
+         * Executes a map function on each item in the Vector,
+         * returning a new Vector.
+         *
+         * @param callback Function of signature `function(currentValue, index, vector)`.
+         */
+
+        [Function(F="function(E, uint, Vector.<E>):E")]
+
+        [FFI("map")]
+
+        function map(callback:F):Vector.<E>
+        {
+            var i:uint = 0,
+                r:Vector.<E> = []
+            for each (var value:E in this)
+                r.push(callback(value, i++, this))
+            return r
+        }
+
+        /**
+         * Executes a test function on each item in the Vector until an item
+         * is reached that returns <code>false</code> for the specified function.
+         * Use this method to determine whether all items in a Vector meet a criterion,
+         * such as having values less than a particular number.
+         *
+         * @param callback Function of signature `function(currentValue, index, vector)`.
+         */
+
+        [Function(F="function(E, uint, Vector.<E>):Boolean")]
+
+        [FFI("every")]
+
+        function every(callback:F):Boolean
+        {
+            for (var i:uint = 0; i !== length; ++i)
+                if (!callback(this[i], i, this))
+                    return false
+            return true
+        }
+
+        /**
+         * Executes a test function on each item in the Vector until an item
+         * is reached that returns <code>true</code>.
+         * Use this method to determine whether any items in a Vector meet a criterion,
+         * such as having a value less than a particular number.
+         *
+         * @param callback Function of signature `function(currentValue, index, vector)`.
+         */
+
+        [Function(F="function(E, uint, Vector.<E>):Boolean")]
+
+        [FFI("some")]
+
+        function some(callback:F):Boolean
+        {
+            for (var i:uint = 0; i !== length; ++i)
+                if (callback(this[i], i, this))
+                    return true
+            return false
+        }
+
+        /**
+         * Executes a reduce function on each item in the Vector, from left to right,
+         * resulting into a single value.
+         *
+         * @param callback Function of signature `function(accumulator, currentValue, index, vector)`.
+         */
+
+        [Function(F="function(E, E, uint, Vector.<E>):E")]
+
+        [FFI("reduce")]
+
+        function reduce(callback:F, initialValue:E = 0):E
+        {
+            var v = initialValue
+            for (var i:uint = 0; i != length; ++i)
+                v = callback(v, this[i], i, this)
+            return v
+        }
+
+        /**
+         * Executes a reduce function on each item in the Vector, from right to left,
+         * resulting into a single value.
+         *
+         * @param callback Function of signature `function(accumulator, currentValue, index, vector)`.
+         */
+
+        [Function(F="function(E, E, uint, Vector.<E>):E")]
+
+        [FFI("reduceright")]
+
+        function reduceRight(callback:F, initialValue:E = 0):E
+        {
+            var v = initialValue
+            for (var i:int = length; --i != -1 && i < length;)
+                v = callback(v, this[i], i, this)
+            return v
+        }
+
+        override function toString():String
+        {
+            return join(",")
+        }
+    }
+
+    /**
+     * The SortOptions enumeration defines constants for use with the method <reference name="Vector#sort"/>.
+     */
+    enum SortOptions
+    {
+        const CASE_INSENSITIVE
+    }
+
+    /**
+     * The Comparison enumeration defines constants that result from sorting comparisons.
+     */
+
+    [MinEnum]
+
+    enum Comparison:int
+    {
+        const LESS_THAN = -1
+
+        const EQUAL = 0
+
+        const GREATER_THAN = 1
+    }
+}

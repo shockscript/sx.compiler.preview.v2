@@ -1,0 +1,52 @@
+package shockscript.errors
+{
+    /**
+     * @private
+     */
+
+    [Extern]
+
+    [MinEnum]
+
+    enum ErrorForms
+    {
+        // (index, length)
+        const OUT_OF_BOUNDS = 0x700
+
+        const WRONG_PARAM_TYPE
+
+        const XML_PREFIX_MUST_BE_EMPTY
+
+        static function throwError (type:ErrorForms, kind:ErrorFormsThrowable, ...arguments:String):void
+        {
+            type.throwError(kind, arguments)
+        }
+
+        native function throwError (kind:ErrorFormsThrowable, ...arguments:String):void
+    }
+
+    /**
+     * @private
+     */
+
+    [MinEnum]
+
+    enum ErrorFormsThrowable
+    {
+        const ERROR
+
+        const TYPE_ERROR
+
+        const VERIFY_ERROR
+
+        const ARGUMENT_ERROR
+
+        const RANGE_ERROR
+
+        const SYNTAX_ERROR
+
+        const URI_ERROR
+
+        const REFERENCE_ERROR
+    }
+}

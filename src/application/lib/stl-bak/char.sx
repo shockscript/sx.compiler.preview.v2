@@ -1,0 +1,377 @@
+package
+{
+    use namespace shockscript
+
+    /**
+     * The char data type represents an Unicode Code Point.
+     * char is an integer in one of the ranges (0..<code>0xd7ff</code>) and (<code>0xf900</code>..<code>0x10ffff</code>).
+     *
+     * A char value may appear as a numeric or string literal when the context type is char:
+     *
+     * <listing>
+     * var ch:char = "\u{201C}"
+     * trace(ch, "U+$1".apply(ch.toString(16))) // “  U+201c
+     * </listing>
+     */
+
+    [Primitive]
+
+    [FFI]
+
+    final class char
+    {
+        static const MIN_VALUE:char = 0
+
+        static const MAX_VALUE:char = 0x10ffff
+
+        /**
+         * Returns the Unicode General Category of the Code Point.
+         */
+        function get category ():CharCategory
+        {
+            return CharCategory.fromCharCode(this)
+        }
+
+        function toUpperCase ():char
+        {
+            return String.fromCharCode(this).toUpperCase().charCodeAt(0)
+        }
+
+        function toLowerCase ():char
+        {
+            return String.fromCharCode(this).toLowerCase().charCodeAt(0)
+        }
+
+        [Redefine]
+
+        function toString (radix:Number = NaN):String
+        {
+            return radix!=NaN ? uint(this).toString(radix) : String.fromCharCode(this)
+        }
+    }
+
+    /**
+     * The CharInput class lets you scan String characters with low overhead.
+     *
+     * @example
+     *
+     * The brackets operator can be used to lookbehind or lookahead:
+     *
+     * <listing>
+     * var arr = new CharInput("shockscript")
+     * arr.shift()
+     * trace(arr[-1]) // "s"
+     * </listing>
+     *
+     * @internal The CharInput class internally reads a direct string memory. If the CharInput() constructor
+     * receives a String object pointing to a slice or jagged string memory, it is auto-converted into a direct string.
+     */
+
+    [DontInit]
+
+    [Extern]
+
+    final class CharInput
+    {
+        private const _length:uint
+
+        private var _index:uint
+
+        /**
+         * Constructs a CharInput object.
+         */
+        native function CharInput(str:String)
+
+        proxy native function getProperty(index:int):char
+
+        proxy native function nextNameIndex(index:ulong):ulong
+
+        proxy native function nextValue(index:ulong):char
+
+        function get length():uint
+        {
+            return _length
+        }
+
+        native function shift():char
+
+        native function slice(from:uint = 0, to:uint = uint.MAX_VALUE):String
+
+        /**
+         * Indicates the index on the String object previously passed as
+         * argument to the <code>CharInput()</code> constructor.
+         *
+         * @throws RangeError
+         */
+        function get index():uint
+        {
+            return _index
+        }
+
+        native function set index(value)
+
+        /**
+         * Indicates if there are remaining characters to be read.
+         */
+        function get hasRemaining():Boolean
+        {
+            return _index != _length
+        }
+
+        native function beginSlice():void
+
+        native function endSlice():String
+
+        /**
+         * Returns the String object previously passed
+         * to the <code>CharInput()</code> constructor.
+         */
+        override native function toString():String
+    }
+
+    /**
+     * The CharCategory enumeration lets you validate the Unicode General Category of a character.
+     *
+     * The constants <code>other</code>, <code>letter</code>, <code>mark</code>, <code>number</code>,
+     * <code>punctuation</code>, <code>symbol</code> and <code>separator</code> are General Category groups.
+     * You can use the <code>in</code> operator to verify that a General Category
+     * belongs to a group.
+     */
+    enum CharCategory : uint
+    {
+        const CONTROL_OTHER      // Cc
+
+        const FORMAT_OTHER       // Cf
+
+        const PRIVATE_USE_OTHER  // Co
+
+        const SURROGATE_OTHER    // Cs
+
+        const NOT_ASSIGNED_OTHER // Cn
+
+        const LOWERCASE_LETTER = 16 // Ll
+
+        const MODIFIER_LETTER       // Lm
+
+        const OTHER_LETTER          // Lo
+
+        const TITLECASE_LETTER      // Lt
+
+        const UPPERCASE_LETTER      // Lu
+
+        const COMBINING_SPACING_MARK = 32 // Mc
+
+        const ENCLOSING_MARK              // Me
+
+        const NON_SPACING_MARK            // Mn
+
+        const DECIMAL_NUMBER = 64        // Nd
+
+        const LETTER_NUMBER              // Nl
+
+        const OTHER_NUMBER               // No
+
+        const CONNECTOR_PUNCTUATION      // Pc
+
+        const DASH_PUNCTUATION           // Pd
+
+        const OPEN_PUNCTUATION           // Ps
+
+        const CLOSE_PUNCTUATION          // Pe
+
+        const INITIAL_QUOTE_PUNCTUATION  // Pi
+
+        const FINAL_QUOTE_PUNCTUATION    // Pf
+
+        const OTHER_PUNCTUATION          // Po
+
+        const CURRENCY_SYMBOL            // Sc
+
+        const MODIFIER_SYMBOL            // Sk
+
+        const MATH_SYMBOL                // Sm
+
+        const OTHER_SYMBOL               // So
+
+        const LINE_SEPARATOR             // Zl
+
+        const PARAGRAPH_SEPARATOR        // Zp
+
+        const SPACE_SEPARATOR            // Zs
+
+        const OTHER = 128
+
+        const LETTER
+
+        const MARK
+
+        const NUMBER
+
+        const PUNCTUATION
+
+        const SYMBOL
+
+        const SEPARATOR
+
+        /**
+         * Retrieves a character category.
+         */
+        native static function fromCharCode (ch:char):CharCategory
+
+        /**
+         * Retrieves CharCategory from a name abbreviation. If the abbreviation
+         * consists of a single letter, the method returns a General Category group.
+         *
+         * @example
+         *
+         * <listing>
+         * CharCategory.fromName("L") // letter
+         * CharCategory.fromName("Pc") // connectorPunctuation
+         * </listing>
+         */
+        static function fromName (str:String):?CharCategory
+        {
+            str = str.toUpperCase()
+            return str in ugc_abbrev ? ugc_abbrev[str] : undefined
+        }
+
+        /**
+         * Indicates whether General Category is in Other group.
+         */
+        function get isOther ():Boolean
+        {
+            return !(uint(this) >> 4) || this == "other"
+        }
+
+        /**
+         * Indicates whether General Category is in Letter group.
+         */
+        function get isLetter ():Boolean
+        {
+            return uint(this) >> 4 === 1 || this == "letter"
+        }
+
+
+        /**
+         * Indicates whether General Category is in Mark group.
+         */
+        function get isMark ():Boolean
+        {
+            return uint(this) >> 5 === 1 || this == "mark"
+        }
+
+
+        /**
+         * Indicates whether General Category is in Number group.
+         */
+        function get isNumber ():Boolean
+        {
+            return (uint(this) >> 6 === 1 && uint(this) < uint(CONNECTOR_PUNCTUATION)) || this == "number"
+        }
+
+
+        /**
+         * Indicates whether General Category is in Punctuation group.
+         */
+        function get isPunctuation ():Boolean
+        {
+            return (uint(this) >> 7 === 1 && uint(this) > uint(OTHER_NUMBER) && uint(this) < uint(CURRENCY_SYMBOL)) || this == "punctuation"
+        }
+
+
+        /**
+         * Indicates whether General Category is in Symbol group.
+         */
+        function get isSymbol ():Boolean
+        {
+            return (uint(this) >> 8 === 1 && uint(this) > uint(OTHER_PUNCTUATION) && uint(this) < uint(LINE_SEPARATOR)) || this == "symbol"
+        }
+
+
+        /**
+         * Indicates whether General Category is in Separator group.
+         */
+        function get isSeparator ():Boolean
+        {
+            return (uint(this) >> 9 === 1 && uint(this) > uint(OTHER_SYMBOL)) || this == "separator"
+        }
+
+
+        function testCharCode (ch:char):Boolean
+        {
+            if (!(this.valueOf() & 128))
+                return CharCategory.fromCharCode(ch) == this
+            return CharCategory.fromCharCode(ch) in this
+        }
+
+        proxy function hasProperty (category:CharCategory):Boolean
+        {
+            if (!(this.valueOf() & 128))
+            {
+                return category == this
+            }
+            switch (this)
+            {
+                case "other":
+                    return category.isOther
+
+                case "letter":
+                    return category.isLetter
+
+                case "mark":
+                    return category.isMark
+
+                case "number":
+                    return category.isNumber
+
+                case "separator":
+                    return category.isSeparator
+
+                case "punctuation":
+                    return category.isPunctuation
+            }
+            return category.isSymbol
+        }
+    }
+
+    shockscript const ugc_abbrev:Dictionary.<String, CharCategory> =
+    {
+        C: CharCategory.OTHER,
+        CC: CharCategory.CONTROL_OTHER,
+        CF: CharCategory.FORMAT_OTHER,
+        CO: CharCategory.PRIVATE_USE_OTHER,
+        Cs: CharCategory.SURROGATE_OTHER,
+        Cn: CharCategory.NOT_ASSIGNED_OTHER,
+        L: CharCategory.LETTER,
+        LL: CharCategory.LOWERCASE_LETTER,
+        LM: CharCategory.MODIFIER_LETTER,
+        LO: CharCategory.OTHER_LETTER,
+        LT: CharCategory.TITLECASE_LETTER,
+        LU: CharCategory.UPPERCASE_LETTER,
+        M: CharCategory.MARK,
+        MC: CharCategory.COMBINING_SPACING_MARK,
+        ME: CharCategory.ENCLOSING_MARK,
+        MN: CharCategory.NON_SPACING_MARK,
+        N: CharCategory.NUMBER,
+        ND: CharCategory.DECIMAL_NUMBER,
+        NL: CharCategory.LETTER_NUMBER,
+        NO: CharCategory.OTHER_NUMBER,
+        P: CharCategory.PUNCTUATION,
+        PC: CharCategory.CONNECTOR_PUNCTUATION,
+        PD: CharCategory.DASH_PUNCTUATION,
+        PS: CharCategory.OPEN_PUNCTUATION,
+        PE: CharCategory.CLOSE_PUNCTUATION,
+        PI: CharCategory.INITIAL_QUOTE_PUNCTUATION,
+        PF: CharCategory.FINAL_QUOTE_PUNCTUATION,
+        PO: CharCategory.OTHER_PUNCTUATION,
+        S: CharCategory.SYMBOL,
+        SC: CharCategory.CURRENCY_SYMBOL,
+        SK: CharCategory.MODIFIER_SYMBOL,
+        SM: CharCategory.MATH_SYMBOL,
+        SO: CharCategory.OTHER_SYMBOL,
+        Z: CharCategory.SEPARATOR,
+        ZL: CharCategory.LINE_SEPARATOR,
+        ZP: CharCategory.PARAGRAPH_SEPARATOR,
+        ZS: CharCategory.SPACE_SEPARATOR,
+    }
+}

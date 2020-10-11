@@ -1,0 +1,13 @@
+package
+{
+    /**
+     * The Generator class is the static type returned by functions containing
+     * the <code>yield</code> operator.
+     */
+
+    [DontConstruct]
+
+    final class Generator.<T>
+    {
+    }
+}

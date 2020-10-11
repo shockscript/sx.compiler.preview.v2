@@ -1,0 +1,15 @@
+package
+{
+    [DontConstruct]
+
+    final class JSON
+    {
+        [Import("JSON_parse")]
+
+        native static function parse(str:String):*
+
+        [Import("JSON_stringify")]
+
+        native static function stringify(value:*):String
+    }
+}

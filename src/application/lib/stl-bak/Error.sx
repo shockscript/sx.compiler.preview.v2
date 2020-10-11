@@ -1,0 +1,88 @@
+package
+{
+    /**
+     * Error is the base class for runtime exceptions
+     * with a call stack trace.
+     */
+
+    [DontInit]
+
+    [Extern]
+
+    class Error
+    {
+        const errorID:int
+
+        native function Error(message:String = "", id:int = 0)
+
+        native function getStackTrace():?String
+
+        native function get message():String
+
+        native function set message(value)
+
+        function get name():String
+        {
+            return super.toString().match(/t ([^\]]+)/)[1]
+        }
+
+        override function toString():String
+        {
+            return name
+        }
+    }
+
+    [Extern]
+
+    class ArgumentError extends Error
+    {
+    }
+
+    [Extern]
+
+    class AssertionError extends Error
+    {
+    }
+
+    [Extern]
+
+    class RangeError extends Error
+    {
+    }
+
+    [Extern]
+
+    class ReferenceError extends Error
+    {
+    }
+
+    [Extern]
+
+    class SecurityError extends Error
+    {
+    }
+
+    [Extern]
+
+    class SyntaxError extends Error
+    {
+    }
+
+    [Extern]
+
+    class TypeError extends Error
+    {
+    }
+
+    [Extern]
+
+    class URIError extends Error
+    {
+    }
+
+    [Extern]
+
+    class VerifyError extends Error
+    {
+    }
+}

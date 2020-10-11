@@ -1,0 +1,133 @@
+package
+{
+    [Primitive]
+    [DontInit]
+    [Extern]
+    final class Number
+    {
+        static const MIN_VALUE : Number = 5e-324
+
+        static const MAX_VALUE : Number = 1.7976931348623157e308
+
+        static const POSITIVE_INFINITY : Number = 1/0
+
+        static const NEGATIVE_INFINITY : Number = -1/0
+
+        [Redefine]
+        native function toString(radix:Number = NaN):String
+
+        native function toFixed(fractionDigits:uint = 0):String
+    }
+
+    [Primitive]
+    [DontInit]
+    [Extern]
+    final class float
+    {
+        static const MIN_VALUE:float = 0
+
+        static const MAX_VALUE:float = 0
+
+        static const NEGATIVE_INFINITY:float = -Infinity
+
+        static const POSITIVE_INFINITY:float = Infinity
+
+        [Redefine]
+        function toString(radix:Number = NaN):String
+        {
+            return Number(this).toString(radix)
+        }
+
+        function toFixed(fractionDigits:uint = 0):String
+        {
+            return Number(this).toFixed(fractionDigits)
+        }
+    }
+
+    /**
+     * The ulong data type represents a 64-bit unsigned integer
+     * of range 0..2<sup>64</sup>-1.
+     */
+    [Primitive]
+    [DontInit]
+    [Extern]
+    final class ulong
+    {
+        static const MIN_VALUE:ulong = 0
+
+        static const MAX_VALUE:ulong = 0 /*(0xffffffff << 32) | 0xffffffff*/
+
+        [Redefine]
+        native function toString(radix:Number = NaN):String
+    }
+
+    [Primitive]
+    [DontInit]
+    [Extern]
+    final class uint
+    {
+        static const MIN_VALUE:uint = 0
+
+        static const MAX_VALUE:uint = 0xffffffff
+
+        [Redefine]
+        function toString(radix:Number = NaN):String
+        {
+            return Number(this).toString(radix)
+        }
+    }
+
+    [Primitive]
+    [DontInit]
+    [Extern]
+    final class int
+    {
+        static const MIN_VALUE:int = -0x80000000
+
+        static const MAX_VALUE:int = 0x7fffffff
+
+        [Redefine]
+        function toString(radix:Number = NaN):String
+        {
+            return Number(this).toString(radix)
+        }
+    }
+
+    [Primitive]
+    [DontInit]
+    [Extern]
+    final class byte
+    {
+        static const MIN_VALUE:byte = 0
+
+        static const MAX_VALUE:byte = 0xff
+
+        [Redefine]
+        function toString(radix:Number = NaN):String
+        {
+            return Number(this).toString(radix)
+        }
+    }
+
+    /**
+     * The NativeInt class is an unsigned integer data type whose range varies across
+     * host environments.
+     */
+    [Primitive]
+    [DontInit]
+    [Extern]
+    final class NativeInt
+    {
+        static const MIN_VALUE:NativeInt = 0
+
+        static const MAX_VALUE:NativeInt = _max()
+
+        static native function _max():NativeInt
+
+        [Redefine]
+        function toString(radix:Number = NaN):String
+        {
+            return Number(this).toString()
+        }
+    }
+}

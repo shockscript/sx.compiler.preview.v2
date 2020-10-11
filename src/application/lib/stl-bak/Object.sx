@@ -1,0 +1,71 @@
+package {
+    [Extern]
+    class Object
+    {
+        function Object()
+        {
+        }
+
+        /*
+         * Returns either "[object Function]" (for function), "[object Array]" (for tuple) or "[object C]".
+         */
+        private native function _objectTypeName():String
+
+        function toString():String
+        {
+            switch type (this)
+            {
+                case (num:Number)
+                {
+                    return num.toString()
+                }
+                case (num:NativeInt)
+                {
+                    return num.toString()
+                }
+                case (num:ulong)
+                {
+                    return num.toString()
+                }
+                case (num:char)
+                {
+                    return num.toString()
+                }
+                case (num:uint)
+                {
+                    return num.toString()
+                }
+                case (num:int)
+                {
+                    return num.toString()
+                }
+                case (num:byte)
+                {
+                    return num.toString()
+                }
+                case (num:float)
+                {
+                    return num.toString()
+                }
+            }
+            return _objectTypeName()
+        }
+
+        function toLocaleString():String
+        {
+            return toString()
+        }
+
+        function valueOf():Object
+        {
+            switch type (this)
+            {
+                case (d:Date)
+                {
+                    return d.valueOf()
+                }
+            }
+            return this
+        }
+    }
+}

@@ -1,0 +1,320 @@
+package
+{
+    import shockscript.errors.*
+
+    use namespace shockscript
+
+    /**
+     * The String class is a data type that represents a string of Unicode characters.
+     */
+
+    [Primitive]
+
+    [DontInit]
+
+    [FFI]
+
+    final class String
+    {
+        native function String(value : *)
+
+        /**
+         * Constructs String from given code points.
+         */
+        native static function fromCharCode(...arguments:char):String
+
+        native proxy function nextNameIndex(index:uint):uint
+
+        native proxy function nextValue(index:uint):String
+
+        /**
+         * Applies arguments to a String.
+         *
+         * The character sequence <b>$</b><i>n</i> is replaced by the (<i>n</i> - 1)th
+         * element in <code>arguments</code> and <b>$$</b> is replaced by a single dollar.
+         *
+         * @example
+         *
+         * <table>
+         *   <tr><td><code>"Welcome back, $1.".apply("Tom")</code><td>Welcome back, Tom.</td></tr>
+         *   <tr><td><code>"$2..$1".apply(10, 0)</code><td>0..10</td></tr>
+         * </table>
+         */
+        function apply(...arguments:*):String
+        {
+            return replace(/\$(\$|\d+)/g, function([_,str])
+            {
+                if (str == "$")
+                    return "$"
+                var i = uint(parseInt(str))
+                return i <= 0 || i > arguments.length ? "undefined" : String(arguments[i - 1])
+            })
+        }
+
+        /**
+         * Returns the number of Unicode Code Points in the String.
+         */
+        native function get length():uint
+
+        native function slice(from:int = 0, to:int = int.MAX_VALUE):String
+
+        /**
+         * Retrieves an Unicode Code Point from the sequence. If the index is out of bounds,
+         * the return is 0.
+         */
+        native function charCodeAt(index:uint):char
+
+        proxy function getProperty(index:uint):String
+        {
+            return charAt(index)
+        }
+
+        /**
+         * Retrieves an Unicode Code Point from the sequence and returns
+         * it as a String. If the index is out of bounds, the return is the empty String.
+         */
+        function charAt(index:uint):String
+        {
+            return index < length ? fromCharCode(charCodeAt(index)) : ""
+        }
+
+        native function localeCompare(str:String):int
+
+        private function compare(str:String):Comparison
+        {
+            var arr1 = CharInput(this),
+                arr2 = CharInput(str)
+            loop:
+            while (arr1.hasRemaining)
+            {
+                var ch1 = arr1.shift()
+                if (arr2.hasRemaining)
+                {
+                    var ch2 = arr2.shift()
+                    if (ch1 < ch2)
+                        return "lessThan"
+                    if (ch1 != ch2)
+                        return "greaterThan"
+                }
+                else
+                    return "greaterThan"
+            }
+            if (arr2.hasRemaining)
+            {
+                arr2.shift()
+                return "lessThan"
+            }
+            return "equal"
+        }
+
+        function startsWith(str:(String, Vector.<String>)):Boolean
+        {
+            switch type (str)
+            {
+                case (str:String)
+                {
+                    return length < str.length ? false : slice(0, int(str.length)) == str
+                }
+                case (str:Vector.<String>)
+                {
+                    return str.some(function(str) str.startsWith(str))
+                }
+            }
+            return false
+        }
+
+        function endsWith(str:(String, Vector.<String>)):Boolean
+        {
+            switch type (str)
+            {
+                case (str:String)
+                {
+                    return length < str.length ? false : slice(length - str.length) == str
+                }
+                case (str:Vector.<String>)
+                {
+                    return str.some(function(str) str.endsWith(str))
+                }
+            }
+            return false
+        }
+
+        native function match(regexp:RegExp):?MatchData
+
+        function substr(index:int, length:uint = uint.MAX_VALUE):String
+        {
+            if (index < 0)
+            {
+                index += this.length
+            }
+            return slice(index, index + length)
+        }
+
+        function substring(from:uint, to:uint = uint.MAX_VALUE):String
+        {
+            var l = length
+            if (from > to)
+            {
+                var k = from
+                from = to
+                to = k
+            }
+            return slice(from, to)
+        }
+
+        function indexOf(str:String, startIndex:uint = 0):int
+        {
+            if (!str)
+                return startIndex
+
+            var arr1 = CharInput(this)
+            while (arr1.index !== startIndex)
+                arr1.shift()
+
+            var first = str.charCodeAt(0)
+            search:
+            for each (var ch in arr1)
+            {
+                if (ch != first)
+                    continue
+                var j = arr1.index - 1
+                var arr2 = new CharInput(str)
+                arr2.shift()
+                for each (ch in arr2)
+                {
+                    if (!arr1.hasRemaining)
+                        break
+                    if (ch !== arr1.shift())
+                        continue search
+                }
+                return j
+            }
+            return -1
+        }
+
+        function lastIndexOf(str:String, fromIndex:int = -1):int
+        {
+            var i = fromIndex,
+                j:int
+            for (; j = indexOf(str, i + 1);)
+            {
+                if (j == -1)
+                    break
+                i = j
+            }
+            return i
+        }
+
+        function repeat(times:Number):String
+        {
+            var arr = StringOutput()
+            for (var i = 0; i!=times; ++i)
+                arr.push(this)
+            return arr.toString()
+        }
+
+        [Function(F="function(Vector.<String>, Vector.<uint>):String")]
+
+        [OptIn(str="String", repl="String", call="_replace1")]
+
+        [OptIn(str="String", repl="F", call="_replace2")]
+
+        [OptIn(str="RegExp", repl="String", call="_replace3")]
+
+        [OptIn(str="RegExp", repl="F", call="_replace4")]
+
+        function replace(str:(String, RegExp), repl:(String, F)):String
+        {
+            if (str is str:String && repl is repl:String)
+                return _replace1(str, repl)
+            if (str is str:String && repl is repl:F)
+                return _replace2(str, repl)
+            if (str is regex:RegExp && repl is repl:String)
+                return _replace3(regex, repl)
+            return _replace4(RegExp(str), F(repl))
+        }
+
+        [FFI("replace1")]
+
+        native private function _replace1(str:String, repl:String):String
+
+        [FFI("replace2")]
+
+        [Function(F="function(Vector.<String>, Vector.<uint>):String")]
+
+        native private function _replace2(str:String, repl:F):String
+
+        [FFI("replace3")]
+
+        native private function _replace3(str:RegExp, repl:String):String
+
+        [FFI("replace4")]
+
+        [Function(F="function(Vector.<String>, Vector.<uint>):String")]
+
+        native private function _replace4(str:RegExp, repl:F):String
+
+        native function split(sep:*, limit:uint = uint.MAX_VALUE):Vector.<String>
+
+        override function toString():String
+        {
+            return this
+        }
+
+        native function toUpperCase():String
+
+        native function toLowerCase():String
+
+        [FFI("concat")]
+
+        native proxy function add(str:String):String
+
+        proxy function lessThan(str:String):Boolean
+        {
+            return compare(str)=="lessThan"
+        }
+
+        proxy function greaterThan(str:String):Boolean
+        {
+            return compare(str)=="greaterThan"
+        }
+
+        proxy function lessOrEquals(str:String):Boolean
+        {
+            return compare(str)!="greaterThan"
+        }
+
+        proxy function greaterOrEquals(str:String):Boolean
+        {
+            return compare(str)!="lessThan"
+        }
+    }
+
+    /**
+     * The StringOutput class lets you construct String objects with low overhead.
+     */
+
+    [FFI]
+
+    [DontInit]
+
+    final class StringOutput
+    {
+        native function StringOutput()
+
+        native function get length():uint
+
+        [OptIn(value="char", apply="pushChar")]
+
+        function push(value:*):uint
+        {
+            return pushString(String(value))
+        }
+
+        private native function pushChar(ch:char):uint
+
+        private native function pushString(str:String):uint
+
+        override native function toString():String
+    }
+}

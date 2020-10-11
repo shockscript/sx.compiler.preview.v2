@@ -1,0 +1,152 @@
+package
+{
+    [DontInit]
+    class ByteArray
+    {
+        native function ByteArray()
+
+        final native function get endian():Endian
+
+        final native function set endian(value)
+
+        /**
+         * @internal Modifying the length property may also decrease the
+         * position property.
+         */
+
+        final native function get length():ulong
+
+        final native function set length(value)
+
+        final native function get position():ulong
+
+        final native function set position(value)
+
+        final function get bytesAvailable():ulong
+        {
+            return length - position
+        }
+
+        final native function readByte():int
+
+        final native function readDouble():Number
+
+        final native function readFloat():float
+
+        final native function readInt():int
+
+        final native function readShort():int
+
+        final native function readUnsignedByte():byte
+
+        final native function readUnsignedShort():uint
+
+        final native function readUnsignedInt():uint
+
+        final function readBoolean():Boolean
+        {
+            return readUnsignedByte()==1
+        }
+
+        final native function writeByte(value:int):void
+
+        final native function writeDouble(value:Number):void
+
+        final native function writeFloat(value:float):void
+
+        final native function writeInt(value:int):void
+
+        final native function writeShort(value:int):void
+
+        final native function writeUnsignedByte(value:byte):void
+
+        final native function writeUnsignedInt(value:uint):void
+
+        final function writeUnsignedShort(value:uint):void
+        {
+            writeShort(value<0x800000 ? int(value) : -int(value&0x7fffff))
+        }
+
+        final function writeBoolean(value:Boolean):void
+        {
+            writeUnsignedByte(value?1:0)
+        }
+
+        /**
+         * Reads bytes into the specified ByteArray.
+         *
+         * @param offset Offset into the <code>bytes</code> parameter.
+         * @param length Amount of bytes to read. If 0, all bytes of this ByteArray are read.
+         */
+
+        final native function readBytes(bytes:ByteArray, offset:ulong = 0, length:ulong = 0):void
+
+        /**
+         * Writes bytes from the specified ByteArray.
+         *
+         * @param offset Offset into the <code>bytes</code> parameter.
+         * @param length Amount of bytes to read. If 0, all bytes from the <code>bytes</code> parameter are read.
+         */
+
+        final native function writeBytes(bytes:ByteArray, offset:ulong = 0, length:ulong = 0):void
+
+        final native proxy function getProperty(index:ulong):byte
+
+        final native proxy function setProperty(index:ulong, value:byte):void
+
+        final proxy function deleteProperty(index:ulong):Boolean
+        {
+            if (index >= length)
+                return false;
+            var k = this.position;
+            this.position = index;
+            var ba = splice(1);
+            writeBytes(ba);
+            this.position = k >= length ? length - 1 : k;
+            return true;
+        }
+
+        /**
+         * Removes and writes bytes at the current position.
+         * If the `length` parameter is greater than the number of bytes available,
+         * the number of bytes available is used instead.
+         *
+         * @param length Number of bytes to remove.
+         * @param bytes Bytes to write.
+         * @return The removed bytes.
+         */
+
+        final function splice(length:ulong, bytes:?ByteArray = undefined):ByteArray
+        {
+            length = length > bytesAvailable ? bytesAvailable : length;
+            var ba2 = new ByteArray;
+            if (length)
+                readBytes(ba2, 0, length);
+            var ba3 = new ByteArray;
+            readBytes(ba3, 0, bytesAvailable);
+            this.length -= length;
+            if (bytes)
+                writeBytes(bytes)
+            writeBytes(ba3);
+            return ba2;
+        }
+
+        /**
+         * Removes byte at current position. If there is no byte available,
+         * the default value of 0 is returned.
+         */
+
+        final function shift():byte
+        {
+            var ba = splice(1);
+            return ba.length ? ba.readUnsignedByte() : 0;
+        }
+    }
+
+    enum Endian
+    {
+        const BIG_ENDIAN
+
+        const LITTLE_ENDIAN
+    }
+}

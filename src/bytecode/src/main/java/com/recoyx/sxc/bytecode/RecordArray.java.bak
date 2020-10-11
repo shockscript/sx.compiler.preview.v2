@@ -1,0 +1,443 @@
+package com.recoyx.sxc.bytecode;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import com.google.common.primitives.*;
+
+public final class RecordArray
+{
+    private ByteBuffer _buffer = new ByteBuffer();
+    private int _len = 0;
+
+    public RecordArray(ByteBuffer buffer, int length)
+    {
+        _buffer = buffer;
+        _len = length;
+        order(ByteOrder.LITTLE_ENDIAN);
+    }
+
+    public RecordArray(ByteBuffer buffer)
+    {
+        this(buffer, buffer.array().length);
+    }
+
+    public RecordArray(byte[] octets)
+    {
+        this(ByteBuffer.wrap(octets));
+    }
+
+    public RecordArray()
+    {
+        this(ByteBuffer.allocate(8), 0);
+    }
+
+    public ByteBuffer backBuffer()
+    {
+        return _buffer;
+    }
+
+    public int position()
+    {
+        return _buffer.position();
+    }
+
+    public void setPosition(int pos)
+    {
+        if (pos < 0 || pos >= _len)
+        {
+            return;
+        }
+        _buffer.position(pos);
+    }
+
+    public int length()
+    {
+        return _len;
+    }
+
+    public void setLength(int length)
+    {
+        var k = _len;
+        _len = length;
+        if (length > k)
+        {
+            while (_buffer.array().length < length)
+            {
+                var k2 = _buffer.array();
+                _buffer = ByteBuffer.allocate(k2.length * 2);
+                _buffer.put(k2, 0, k2.length);
+            }
+        }
+    }
+
+    public int bytesAvailable()
+    {
+        return _length - _buffer.position();
+    }
+
+    private void _grow(int length)
+    {
+        if ((_pos + length) < _len)
+        {
+            return;
+        }
+        var l = _buffer.array().length + length;
+        while (_buffer.array().length < l)
+        {
+            var k = _buffer.array();
+            _buffer = ByteBuffer.allocate(k.length * 2);
+            _buffer.put(k, 0, k.length);
+        }
+        _length += length;
+    }
+
+    public boolean readBoolean()
+    {
+        return readByte() == 1;
+    }
+
+    public void writeBoolean(boolean value)
+    {
+        writeByte(value ? 1 : 0);
+    }
+
+    public byte readByte()
+    {
+        return _buffer.get();
+    }
+
+    public void writeByte(byte value)
+    {
+        _grow(1);
+        _buffer.put(value);
+    }
+
+    public double readDouble()
+    {
+        return _buffer.getDouble();
+    }
+
+    public void writeDouble(double value)
+    {
+        _grow(8);
+        _buffer.putDouble(value);
+    }
+
+    public int readUnsignedInt()
+    {
+        int r = 0;
+        int shift = 0;
+        for (int i = 0; i != 5; ++i)
+        {
+            var v = readByte();
+            r |= (v & 0x7f) << shift;
+            shift += 7;
+
+            if ((v >>> 7) == 0)
+            {
+                break;
+            }
+        }
+        return r;
+    }
+
+    public void writeUnsignedInt(int value)
+    {
+        if ((value >> 7) == 0)
+        {
+            writeByte((byte) value);
+        }
+        else if ((value >> 14) == 0)
+        {
+            writeByte((byte) (value & 0x7f));
+            writeByte((byte) ((value >>> 7) & 0x7f));
+        }
+        else if ((value >> 21) == 0)
+        {
+            writeByte((byte) (value & 0x7f));
+            writeByte((byte) ((value >>> 7) & 0x7f));
+            writeByte((byte) (value >>> 14));
+        }
+        else if ((value >> 28) == 0)
+        {
+            writeByte((byte) (value & 0x7f));
+            writeByte((byte) ((value >>> 7) & 0x7f));
+            writeByte((byte) ((value >>> 14) & 0x7f));
+            writeByte((byte) (value >>> 21));
+        }
+        else if ((value >> 35) == 0)
+        {
+            writeByte((byte) (value & 0x7f));
+            writeByte((byte) ((value >>> 7) & 0x7f));
+            writeByte((byte) ((value >>> 14) & 0x7f));
+            writeByte((byte) ((value >>> 21) & 0x7f));
+            writeByte((byte) (value >>> 28));
+        }
+        else
+        {
+            throw new RuntimeException("");
+        }
+    }
+
+    public int readInt()
+    {
+        var value = readUnsignedInt();
+        return (value >> 31) != 0 ? -((int) (value & 0x7fffffff)) : value;
+    }
+
+    public void writeInt(int value)
+    {
+        writeUnsignedInt((value >> 31) == 1 ? ((long) (value & 0x7fffffff)) | 0x80000000 : ((long) value));
+    }
+
+    public void readBytes(RecordArray bytes)
+    {
+        return readBytes(bytes, 0);
+    }
+
+    public void readBytes(RecordArray bytes, int offset)
+    {
+        return readBytes(bytes, offset, 0);
+    }
+
+    public void readBytes(RecordArray bytes, int offset, int length)
+    {
+        length = length == 0 ? _len - _buffer.position() : length;
+        if (((offset + length) >= bytes.length()) || ((_pos + length) >= this.length()))
+        {
+            throw new RuntimeException("");
+        }
+        var k = bytes._buffer.position();
+        bytes._buffer.put(_buffer.array(), offset, length);
+        bytes._buffer.position(k);
+    }
+
+    public writeBytes(RecordArray bytes)
+    {
+        writeBytes(bytes, 0);
+    }
+
+    public writeBytes(RecordArray bytes, int offset)
+    {
+        writeBytes(bytes, offset, 0);
+    }
+
+    public writeBytes(RecordArray bytes, int offset, int length)
+    {
+        length = length == 0 ? bytes.length() : length;
+        if (((offset + length) >= bytes.length()) || ((_pos + length) >= this.length()))
+        {
+            throw new RuntimeException("");
+        }
+        _grow(length);
+        _buffer.put(bytes.array(), offset, length);
+    }
+
+    public bcx.Names readNames()
+    {
+        int len = readUnsignedInt();
+        var names = new bcx.Names();
+        for (int i = 0; i != len; ++i)
+        {
+            names.push(readArrayIndex(), readProperty());
+        }
+        return names;
+    }
+
+    public void writeNames(bcx.Names names)
+    {
+        writeUnsignedInt(names.length());
+        for (int i = 0; i != names.length(); ++i)
+        {
+            writeArrayIndex(names.names.get(i));
+            writeProperty(names.properties.get(i));
+        }
+    }
+
+    public bcx.Property readProperty()
+    {
+        byte kind = readByte(0);
+        switch (kind)
+        {
+            case 0:
+                return new bcx.NamespaceProperty(readArrayIndex());
+            case 1:
+                return new bcx.TypeProperty(readArrayIndex());
+            case 2:
+            {
+                var var_prop = new bcx.VariableProperty();
+                var_prop.type = readArrayIndex();
+                byte flags = readByte();
+                var_prop.readOnly = (flags & 1) != 0;
+                if ((flags & 2) != 0)
+                {
+                    var_prop.metaData = new IntVector();
+                    var l = readUnsignedInt();
+                    for (int i = 0; i != l; ++i)
+                    {
+                        var_prop.metaData.push(readArrayIndex());
+                    }
+                }
+                if ((flags & 4) != 0)
+                {
+                    var_prop.initialValue = readConstantValue();
+                }
+                return var_prop;
+            }
+            case 3:
+            {
+                var virtual_prop = new bcx.VirtualProperty();
+                virtual_prop.type = readArrayIndex();
+                virtual_prop.getter = readArrayIndex();
+                virtual_prop.setter = readArrayIndex();
+                return virtual_prop;
+            }
+            default:
+            {
+                return new bcx.FunctionProperty(readArrayIndex());
+            }
+        }
+    }
+
+    public void writeProperty(bcx.Property property)
+    {
+        if (property instanceof bcx.NamespaceProperty)
+        {
+            var ns_prop = (bcx.NamespaceProperty) property;
+            writeByte(0);
+            writeArrayIndex(ns_prop.index);
+        }
+        else if (property instanceof bcx.TypeProperty)
+        {
+            var type_prop = (bcx.TypeProperty) property;
+            writeByte(1);
+            writeArrayIndex(type_prop.index);
+        }
+        else if (property instanceof bcx.VariableProperty)
+        {
+            var var_prop = (bcx.VariableProperty) property;
+            writeByte(2);
+            writeArrayIndex(var_prop.type);
+            byte flags = (var_prop.readOnly ? 1 : 0) | (var_prop.metaData != null ? 2 : 0) | (var_prop.initialValue != null ? 4 : 0);
+            writeByte(flags);
+            if (var_prop.metaData != null)
+            {
+                writeUnsignedInt(var_prop.metaData.length());
+                for (int i = 0; i != var_prop.metaData.length(); ++i)
+                {
+                    writeArrayIndex(var_prop.metaData.get(i));
+                }
+            }
+            if (var_prop.initialValue != null)
+            {
+                writeConstantValue(var_prop.initialValue);
+            }
+        }
+        else if (property instanceof bcx.VirtualProperty)
+        {
+            var virtual_prop = (bcx.VirtualProperty) property;
+            writeByte(3);
+            writeArrayIndex(virtual_prop.type);
+            writeArrayIndex(virtual_prop.getter);
+            writeArrayIndex(virtual_prop.setter);
+        }
+        else
+        {
+            var f_prop = (bcx.FunctionProperty) property;
+            writeByte(4);
+            writeArrayIndex(f_prop.index);
+        }
+    }
+
+    public bcx.ConstantValue readConstantValue()
+    {
+        byte kind = readByte();
+        switch (kind)
+        {
+            case 0:
+                return bcx.UndefinedConstantValue.VALUE;
+            case 1:
+                return bcx.NullConstantValue.VALUE;
+            case 2:
+                return bcx.FalseConstantValue.VALUE;
+            case 3:
+                return bcx.TrueConstantValue.VALUE;
+            case 4:
+                return new bcx.NumberConstantValue(readArrayIndex());
+            case 5:
+                return new bcx.UnsignedIntConstantValue(readUnsignedInt());
+            case 6:
+                return new bcx.IntConstantValue(readArrayIndex());
+            case 7:
+                return new bcx.StringConstantValue(readArrayIndex());
+            case 8:
+                return new bcx.NamespaceConstantValue(readArrayIndex());
+            default:
+                return new bcx.EnumConstantValue(readArrayIndex());
+        }
+    }
+
+    public void writeConstantValue(bcx.ConstantValue value)
+    {
+        if (value instanceof bcx.UndefinedConstantValue)
+        {
+            writeByte(0);
+        }
+        else if (value instanceof bcx.NullConstantValue)
+        {
+            writeByte(1);
+        }
+        else if (value instanceof bcx.FalseConstantValue)
+        {
+            writeByte(2);
+        }
+        else if (value instanceof bcx.TrueConstantValue)
+        {
+            writeByte(3);
+        }
+        else if (value instanceof bcx.NumberConstantValue)
+        {
+            var num_value = (bcx.NumberConstantValue) value;
+            writeByte(4);
+            writeArrayIndex(num_value.index);
+        }
+        else if (value instanceof bcx.UnsignedIntConstantValue)
+        {
+            var uint_value = (bcx.UnsignedIntConstantValue) value;
+            writeByte(5);
+            writeUnsignedInt(uint_value.value);
+        }
+        else if (value instanceof bcx.IntConstantValue)
+        {
+            var int_value = (bcx.IntConstantValue) value;
+            writeByte(6);
+            writeArrayIndex(int_value.index);
+        }
+        else if (value instanceof bcx.StringConstantValue)
+        {
+            var str_value = (bcx.StringConstantValue) value;
+            writeByte(7);
+            writeArrayIndex(str_value.index);
+        }
+        else if (value instanceof bcx.NamespaceConstantValue)
+        {
+            var ns_value = (bcx.NamespaceConstantValue) value;
+            writeByte(8);
+            writeArrayIndex(ns_value.index);
+        }
+        else
+        {
+            var enum_value = (bcx.EnumConstantValue) value;
+            writeByte(9);
+            writeArrayIndex(enum_value.numberIndex);
+        }
+    }
+
+    public bcx.File readFile()
+    {
+    }
+
+    public void writeFile()
+    {
+    }
+}

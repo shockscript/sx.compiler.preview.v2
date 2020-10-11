@@ -1,0 +1,498 @@
+package com.recoyx.sxc.bytecode;
+
+import com.recoyx.sxc.util.IntVector;
+import java.nio.ByteBuffer;
+import java.util.Vector;
+
+public final class bcx
+{
+    static public final class File
+    {
+        public byte version;
+
+        public ConstantPool constantPool = new ConstantPool();
+
+        public Vector<MetaData> metaDataList = new Vector<>();
+
+        public Vector<byte[]> byteArrayList = new Vector<>();
+
+        public Vector<Type> typeList = new Vector<>();
+
+        public Vector<Function> functionList = new Vector<>();
+
+        public Vector<Frame> frameList = new Vector<>();
+
+        public Vector<FunctionBody> functionBodyList = new Vector<>();
+
+        public Vector<Package> packageList = new Vector<>();
+
+        public Vector<Script> scriptList = new Vector<>();
+    }
+
+    static public final class ConstantPool
+    {
+        public Vector<String> strings = new Vector<>();
+
+        public Vector<Namespace> namespaces = new Vector<>();
+
+        public Vector<IntVector> namespaceSets = new Vector<>();
+
+        public Vector<AbstractMultiName> multiNames = new Vector<>();
+
+        public Vector<Double> numbers = new Vector<>();
+
+        public IntVector integers = new IntVector();
+    }
+
+    static public class Namespace
+    {
+    }
+
+    static public final class PublicNamespace extends Namespace
+    {
+        public int definitionPackage;
+
+        public PublicNamespace()
+        {
+            this(0);
+        }
+
+        public PublicNamespace(int definitionPackage)
+        {
+            this.definitionPackage = definitionPackage;
+        }
+    }
+
+    static public final class PrivateNamespace extends Namespace
+    {
+    }
+
+    static public final class ProtectedNamespace extends Namespace
+    {
+    }
+
+    static public final class InternalNamespace extends Namespace
+    {
+        public int definitionPackage;
+
+        public InternalNamespace()
+        {
+            this(0);
+        }
+
+        public InternalNamespace(int definitionPackage)
+        {
+            this.definitionPackage = definitionPackage;
+        }
+    }
+
+    static public final class ExplicitNamespace extends Namespace
+    {
+        public int prefix;
+        public int uri;
+
+        public ExplicitNamespace(int prefix, int uri)
+        {
+            this.prefix = prefix;
+            this.uri = uri;
+        }
+    }
+
+    static public class AbstractMultiName
+    {
+    }
+
+    static public final class QName extends AbstractMultiName
+    {
+        public int namespace;
+        public int localName;
+
+        public QName(int namespace, int localName)
+        {
+            this.namespace = namespace;
+            this.localName = localName;
+        }
+    }
+
+    static public final class MultiName extends AbstractMultiName
+    {
+        public int namespaceSet;
+        public int localName;
+
+        public MultiName(int namespaceSet, int localName)
+        {
+            this.namespaceSet = namespaceSet;
+            this.localName = localName;
+        }
+    }
+
+    static public final class MetaData
+    {
+        public int name;
+        public Vector<MetaDataEntry> entries = null;
+
+        public MetaData(int name)
+        {
+            this.name = name;
+        }
+    }
+
+    static public final class MetaDataEntry
+    {
+        public int name;
+        public ConstantValue value;
+
+        public MetaDataEntry(int name, ConstantValue value)
+        {
+            this.name = name;
+            this.value = value;
+        }
+    }
+
+    static public class ConstantValue
+    {
+    }
+
+    static public final class UndefinedConstantValue extends ConstantValue
+    {
+        static public final ConstantValue VALUE = new UndefinedConstantValue();
+    }
+
+    static public final class NullConstantValue extends ConstantValue
+    {
+        static public final ConstantValue VALUE = new NullConstantValue();
+    }
+
+    static public final class FalseConstantValue extends ConstantValue
+    {
+        static public final ConstantValue VALUE = new FalseConstantValue();
+    }
+
+    static public final class TrueConstantValue extends ConstantValue
+    {
+        static public final ConstantValue VALUE = new TrueConstantValue();
+    }
+
+    static public final class NumberConstantValue extends ConstantValue
+    {
+        public int index;
+
+        public NumberConstantValue(int index)
+        {
+            this.index = index;
+        }
+    }
+
+    static public final class UnsignedIntConstantValue extends ConstantValue
+    {
+        public long value;
+
+        public UnsignedIntConstantValue(long value)
+        {
+            this.value = value;
+        }
+    }
+
+    static public final class IntConstantValue extends ConstantValue
+    {
+        public int index;
+
+        public IntConstantValue(int index)
+        {
+            this.index = index;
+        }
+    }
+
+    static public final class StringConstantValue extends ConstantValue
+    {
+        public int index;
+
+        public StringConstantValue(int index)
+        {
+            this.index = index;
+        }
+    }
+
+    static public final class NamespaceConstantValue extends ConstantValue
+    {
+        public int index;
+
+        public NamespaceConstantValue(int index)
+        {
+            this.index = index;
+        }
+    }
+
+    static public final class EnumConstantValue extends ConstantValue
+    {
+        public int value;
+
+        public EnumConstantValue(int value)
+        {
+            this.value = value;
+        }
+    }
+
+    static public class Type
+    {
+    }
+
+    static public final class ClassType extends Type
+    {
+        public int name;
+
+        public int flags;
+
+        public int definitionPackage;
+
+        public Names ownNames;
+
+        public Names delegateOwnNames;
+
+        public IntVector metaData;
+
+        public int constructorFunction;
+
+        public TypeDescription extendsClass;
+
+        public IntVector implementsInterfaces;
+
+        public Vector<TypeParameterDefinition> typeParams;
+    }
+
+    static public final class InterfaceType extends Type
+    {
+        public int name;
+
+        public int definitionPackage;
+
+        public Names delegateOwnNames;
+
+        public Vector<TypeDescription> extendsInterfaces;
+
+        public IntVector metaData;
+
+        public Vector<TypeParameterDefinition> typeParams;
+    }
+
+    static public final class TypeParameterDefinition
+    {
+        public int name;
+        public boolean numeric;
+        public TypeDescription defaultType;
+        public TypeDescription extendsType;
+        public Vector<TypeDescription> implementsTypes;
+    }
+
+    static public final class EnumType extends Type
+    {
+        public int name;
+
+        public TypeDescription numericType;
+
+        public int definitionPackage;
+
+        public Names ownNames;
+
+        public Names delegateOwnNames;
+
+        public boolean isFlagEnum;
+
+        public boolean minimal;
+
+        public IntVector constantIDs;
+        public IntVector constantNumbers;
+
+        public IntVector metaData;
+    }
+
+    static public class TypeDescription
+    {
+    }
+
+    static public final class PackagePropertyType extends TypeDescription
+    {
+        public int packageID;
+        public int localName;
+
+        public PackagePropertyType(int packageID, int localName)
+        {
+            this.packageID = packageID;
+            this.localName = localName;
+        }
+    }
+
+    static public final class FragmentPropertyType extends TypeDescription
+    {
+        public int frame;
+        public int localName;
+
+        public FragmentPropertyType(int frame, int localName)
+        {
+            this.frame = frame;
+            this.localName = localName;
+        }
+    }
+
+    static public final class TypeParameterType extends TypeDescription
+    {
+        public TypeDescription type;
+        public int index;
+
+        public TypeParameterType(TypeDescription type, int index)
+        {
+            this.type = type;
+            this.index = index;
+        }
+    }
+
+    static public final class InstantiatedType extends TypeDescription
+    {
+        public TypeDescription origin;
+        public Vector<TypeDescription> arguments;
+    }
+
+    static public final class FunctionType extends TypeDescription
+    {
+        public Vector<TypeDescription> params;
+        public Vector<TypeDescription> optParams;
+        public TypeDescription rest;
+        public TypeDescription result;
+    }
+
+    static public final class TupleType extends TypeDescription
+    {
+        public Vector<TypeDescription> elements;
+    }
+
+    static public final class UnionType extends TypeDescription
+    {
+        public Vector<TypeDescription> members;
+    }
+
+    static public final class NullableType extends TypeDescription
+    {
+        public TypeDescription over;
+    }
+
+    static public final class Names
+    {
+        public IntVector names = new IntVector();
+        public Vector<Property> properties = new Vector<>();
+
+        public int length()
+        {
+            return names.length();
+        }
+
+        public void push(int name, Property property)
+        {
+            names.push(name);
+            properties.add(property);
+        }
+    }
+
+    static public class Property
+    {
+    }
+
+    static public final class NamespaceProperty extends Property
+    {
+        public int index;
+
+        public NamespaceProperty(int index)
+        {
+            this.index = index;
+        }
+    }
+
+    static public final class TypeProperty extends Property
+    {
+        public TypeDescription type;
+
+        public TypeProperty(TypeDescription type)
+        {
+            this.type = type;
+        }
+    }
+
+    static public final class VariableProperty extends Property
+    {
+        public TypeDescription type;
+
+        public boolean readOnly;
+
+        public IntVector metaData;
+
+        public ConstantValue initialValue;
+    }
+
+    static public final class VirtualProperty extends Property
+    {
+        public TypeDescription type;
+
+        public int getter;
+
+        public int setter;
+    }
+
+    static public final class FunctionProperty extends Property
+    {
+        public int index;
+
+        public FunctionProperty(int index)
+        {
+            this.index = index;
+        }
+    }
+
+    static public final class Function
+    {
+        public int name;
+
+        public TypeDescription signature;
+
+        public int flags;
+
+        public int definitionPackage;
+
+        public int body;
+
+        public Vector<ConstantValue> optParamDefaults;
+
+        public IntVector metaData;
+    }
+
+    static public final class Frame
+    {
+        public int parentFrame;
+
+        public Names ownNames;
+    }
+
+    static public final class FunctionBody
+    {
+        public int function;
+
+        public int localCount;
+
+        public Vector<TypeDescription> localTypes;
+
+        public int maxStack;
+
+        public int frame;
+
+        public byte[] code;
+    }
+
+    static public final class Package
+    {
+        public int id;
+        public Names ownNames;
+    }
+
+    static public final class Script
+    {
+        public int function;
+    }
+}

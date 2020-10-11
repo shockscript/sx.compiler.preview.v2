@@ -1,0 +1,1 @@
+# ShockScript Standard Library

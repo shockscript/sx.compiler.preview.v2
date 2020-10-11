@@ -1,0 +1,16 @@
+// compile time conversions ---
+
+function config(thresold:Number):void
+{
+    trace(thresold)
+}
+
+config(undefined) // NaN
+
+[Flags]
+enum F : uint
+{
+}
+
+var f:F = undefined
+trace(uint(f)) // 0

@@ -1,0 +1,17 @@
+package
+{
+    /**
+     * The Boolean data type represents one of the two states true and false.
+     */
+    [Primitive]
+    [DontInit]
+    final class Boolean
+    {
+        native function Boolean (value:*)
+
+        override function toString ():String
+        {
+            return this?"true":"false"
+        }
+    }
+}

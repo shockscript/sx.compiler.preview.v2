@@ -1,0 +1,22 @@
+package com.foo.qux
+{
+    function f():void
+    {
+    }
+}
+
+package com.baz.qux
+{
+    function f():void
+    {
+    }
+}
+
+namespace fooNS = "com.foo.qux"
+namespace bazNS = "com.baz.qux"
+
+fooNS::f()
+bazNS::f()
+
+import fooF = com.foo.qux.f
+fooF()

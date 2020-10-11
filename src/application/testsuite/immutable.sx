@@ -1,0 +1,12 @@
+// ranges
+
+for (const i in Range(0, 10, {step:2}))
+{
+    trace(i)
+}
+
+// read-only vector
+
+var vector:Vector.<Number> = [10, ,, 10]
+var r:Array.<Number> = vector.toArray()
+trace(r.first)

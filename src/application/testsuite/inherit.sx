@@ -1,0 +1,13 @@
+class A
+{
+    final function f():void
+    {
+    }
+}
+
+class B extends A
+{
+    override function f():void // verify error
+    {
+    }
+}

@@ -1,0 +1,219 @@
+package
+{
+    [DontInit]
+
+    [FFI]
+
+    class ByteArray
+    {
+        [FFI("new")]
+
+        native function ByteArray()
+
+        [FFI("getendian")]
+
+        final native function get endian():Endian
+
+        [FFI("setendian")]
+
+        final native function set endian(value)
+
+        /**
+         * @internal Modifying the length property may also decrease the
+         * position property.
+         */
+
+        [FFI("getlength")]
+
+        final native function get length():ulong
+
+        [FFI("setlength")]
+
+        final native function set length(value)
+
+        [FFI("getposition")]
+
+        final native function get position():ulong
+
+        [FFI("setposition")]
+
+        final native function set position(value)
+
+        final function get bytesAvailable():ulong
+        {
+            return length - position
+        }
+
+        [FFI("readbyte")]
+
+        final native function readByte():int
+
+        [FFI("readdouble")]
+
+        final native function readDouble():Number
+
+        [FFI("readfloat")]
+
+        final native function readFloat():float
+
+        [FFI("readint")]
+
+        final native function readInt():int
+
+        [FFI("readshort")]
+
+        final native function readShort():int
+
+        [FFI("readbyte")]
+
+        final native function readUnsignedByte():byte
+
+        [FFI("readushort")]
+
+        final native function readUnsignedShort():uint
+
+        [FFI("readuint")]
+
+        final native function readUnsignedInt():uint
+
+        [FFI("readboolean")]
+
+        final function readBoolean():Boolean
+        {
+            return readUnsignedByte()==1
+        }
+
+        [FFI("writebyte")]
+
+        final native function writeByte(value:int):void
+
+        [FFI("writedouble")]
+
+        final native function writeDouble(value:Number):void
+
+        [FFI("writefloat")]
+
+        final native function writeFloat(value:float):void
+
+        [FFI("writeint")]
+
+        final native function writeInt(value:int):void
+
+        [FFI("writeshort")]
+
+        final native function writeShort(value:int):void
+
+        [FFI("writeubyte")]
+
+        final native function writeUnsignedByte(value:byte):void
+
+        [FFI("writeuint")]
+
+        final native function writeUnsignedInt(value:uint):void
+
+        [FFI("writeushort")]
+
+        final function writeUnsignedShort(value:uint):void
+        {
+            writeShort(value<0x800000 ? int(value) : -int(value&0x7fffff))
+        }
+
+        [FFI("writeboolean")]
+
+        final function writeBoolean(value:Boolean):void
+        {
+            writeUnsignedByte(value?1:0)
+        }
+
+        /**
+         * Reads bytes into the specified ByteArray.
+         *
+         * @param offset Offset into the <code>bytes</code> parameter.
+         * @param length Amount of bytes to read. If 0, all bytes of this ByteArray are read.
+         */
+
+        [FFI("readbytes")]
+
+        final native function readBytes(bytes:ByteArray, offset:ulong = 0, length:ulong = 0):void
+
+        /**
+         * Writes bytes from the specified ByteArray.
+         *
+         * @param offset Offset into the <code>bytes</code> parameter.
+         * @param length Amount of bytes to read. If 0, all bytes from the <code>bytes</code> parameter are read.
+         */
+
+        [FFI("writebytes")]
+
+        final native function writeBytes(bytes:ByteArray, offset:ulong = 0, length:ulong = 0):void
+
+        [FFI("getproperty")]
+
+        final native proxy function getProperty(index:ulong):byte
+
+        [FFI("setproperty")]
+
+        final native proxy function setProperty(index:ulong, value:byte):void
+
+        [FFI("deleteproperty")]
+
+        final proxy function deleteProperty(index:ulong):Boolean
+        {
+            if (index >= length)
+                return false;
+            var k = this.position;
+            this.position = index;
+            var ba = splice(1);
+            writeBytes(ba);
+            this.position = k >= length ? length - 1 : k;
+            return true;
+        }
+
+        /**
+         * Removes and writes bytes at the current position.
+         * If the `length` parameter is greater than the number of bytes available,
+         * the number of bytes available is used instead.
+         *
+         * @param length Number of bytes to remove.
+         * @param bytes Bytes to write.
+         * @return The removed bytes.
+         */
+
+        [FFI("splice")]
+
+        final function splice(length:ulong, bytes:?ByteArray = undefined):ByteArray
+        {
+            length = length > bytesAvailable ? bytesAvailable : length;
+            var ba2 = new ByteArray;
+            if (length)
+                readBytes(ba2, 0, length);
+            var ba3 = new ByteArray;
+            readBytes(ba3, 0, bytesAvailable);
+            this.length -= length;
+            if (bytes)
+                writeBytes(bytes)
+            writeBytes(ba3);
+            return ba2;
+        }
+
+        /**
+         * Removes byte at current position. If there is no byte available,
+         * the default value of 0 is returned.
+         */
+
+        [FFI("shift")]
+
+        final function shift():byte
+        {
+            var ba = splice(1);
+            return ba.length ? ba.readUnsignedByte() : 0;
+        }
+    }
+
+    enum Endian
+    {
+        const BIG_ENDIAN
+
+        const LITTLE_ENDIAN
+    }
+}

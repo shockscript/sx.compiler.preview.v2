@@ -1,0 +1,91 @@
+package
+{
+    use namespace shockscript
+
+    use namespace proxy
+
+    import shockscript.impl.*
+
+    [DontInit]
+
+    [Extern]
+
+    final class RegExp
+    {
+        /**
+         * Returns the pattern previously passed to the RegExp() constructor.
+         */
+        public const source : String
+
+        public var lastIndex : uint
+
+        shockscript var _flags : RegExpFlags
+
+        /**
+         * Constructs a new RegExp object.
+         */
+        native function RegExp(pattern:String = "", flags:String = "", references:?Dictionary.<String, RegExp> = null)
+
+        function get global():Boolean
+        {
+            return "global" in _flags
+        }
+
+        function get ignoreCase():Boolean
+        {
+            return "ignoreCase" in _flags
+        }
+
+        function get multiline():Boolean
+        {
+            return "multiline" in _flags
+        }
+
+        native function exec(str:String):?MatchData
+
+        override function toString():String
+        {
+            return "/$1/$2".apply(source, (global ? "g" : "")+(ignoreCase ? "i" : "")+(multiline ? "m" : ""))
+        }
+
+        function test(str:String):Boolean
+        {
+            return !!exec(str)
+        }
+    }
+
+    /**
+     * The MatchData class represents a regular expression match result.
+     */
+
+    [DontConstruct]
+
+    [Extern]
+
+    final class MatchData extends Vector.<?String>
+    {
+        const input:String
+
+        const index:uint
+    }
+}
+
+package shockscript.impl
+{
+    /**
+     * @private
+     */
+
+    [Flags]
+
+    [MinEnum]
+
+    enum RegExpFlags
+    {
+        const IGNORE_CASE
+
+        const GLOBAL
+
+        const MULTILINE
+    }
+}

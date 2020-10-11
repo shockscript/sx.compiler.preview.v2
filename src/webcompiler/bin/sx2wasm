@@ -1,0 +1,11 @@
+#!/bin/bash
+SXC_HOME="`dirname \"$0\"`"              # relative
+SXC_HOME="`( cd \"$SXC_HOME\" && pwd )`"  # absolutized and normalized
+if [ -z "$SXC_HOME" ] ; then
+  # error; for some reason, the path is not accessible
+  # to the script (e.g. permissions re-evaled after suid)
+  exit 1  # fail
+fi
+SXC_HOME="$SXC_HOME/.."
+
+java --enable-preview -jar "$SXC_HOME/lib/sx2wasm.jar" -- $*

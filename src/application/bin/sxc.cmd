@@ -1,0 +1,1 @@
+java --enable-preview -jar %~dp0/../lib/sxc.jar %*

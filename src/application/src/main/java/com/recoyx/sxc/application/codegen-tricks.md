@@ -1,0 +1,1 @@
+- `for each` over Vector (or ?Vector) translates into non-proxy based loop.

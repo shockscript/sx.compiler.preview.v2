@@ -1,0 +1,234 @@
+package
+{
+    import shockscript.errors.*
+
+    use namespace shockscript
+
+    /**
+     * Validates `str` as XML name.
+     */
+    function isXMLName(str:String):Boolean
+    {
+        if (!str)
+            return false
+        var arr = new CharInput(str)
+        if (!isXMLNCNameStart(arr.shift()))
+            return false
+        for each (var ch:char in arr)
+            if (!isXMLNCNamePart(ch))
+                return false
+        return true
+    }
+
+    shockscript function isXMLNCNameStart(ch:char):Boolean
+    {
+        return ch !== 0x3A && isXMLNameStart(ch)
+    }
+
+    shockscript function isXMLNCNamePart(ch:char):Boolean
+    {
+        return ch !== 0x3A && isXMLNamePart(ch)
+    }
+
+    shockscript function isXMLNameStart(ch:char):Boolean
+    {
+        return  ch >= 0x61 && ch <= 0x7A        ||
+                ch >= 0x41 && ch <= 0x5A       ||
+                ch === 0x3A                    ||
+                ch === 0x5F                    ||
+                ch >= 0xC0 && ch <= 0xD6       ||
+                ch >= 0xD8 && ch <= 0xF6       ||
+                ch >= 0xF8 && ch <= 0x2FF      ||
+                ch >= 0x370 && ch <= 0x37D     ||
+                ch >= 0x37F && ch <= 0x1FFF    ||
+                ch == 0x200C || ch == 0x200D ||
+                ch >= 0x2070 && ch <= 0x218F   ||
+                ch >= 0x2C00 && ch <= 0x2FEF   ||
+                ch >= 0x3001 && ch <= 0xD7FF   ||
+                ch >= 0xF900 && ch <= 0xFDCF   ||
+                ch >= 0xFDF0 && ch <= 0xFFFD   ||
+                ch >= 0x10000 && ch <= 0xEFFFF
+    }
+
+    shockscript function isXMLNamePart(ch:char):Boolean
+    {
+        return isXMLNameStart(ch)      ||
+            ch >= 0x30 && ch <= 0x39   ||
+            ch === 0x2D || ch === 0x2E ||
+            ch === 0xB7 || ch >= 0x0300 && ch <= 0x036F ||
+            ch >= 0x203F && ch <= 0x2040
+    }
+
+    native shockscript function defaultNamespace():Namespace
+
+    [DontInit]
+
+    [Extern]
+
+    final class QName
+    {
+        private var _uri:?String
+        private var _localName:String
+
+        /**
+         * @useSignature QName():void
+         * @useSignature QName(localName:QName):void
+         * @useSignature QName(uri:Namespace, localName:QName):void
+         */
+        function QName(arg1:* = undefined, arg2:* = undefined)
+        {
+            var ns:Namespace
+            if (!isUndefined(arg2))
+            {
+                if (!isUndefined(arg1))
+                {
+                    ns = Namespace(arg1)
+                }
+                _localName = String(arg2)
+             }
+            else if (!isUndefined(arg1))
+            {
+                _localName = String(arg1)
+
+                if (_localName != "*")
+                {
+                    ns = defaultNamespace()
+                }
+            }
+            else
+            {
+                _localName = ""
+            }
+
+            if (ns)
+            {
+                _uri = ns.uri
+            }
+        }
+
+        function get uri():?String _uri
+
+        function get localName():String _localName
+
+        override function toString():String
+        {
+            var s = uri == "" ? "" : ((uri === null ? "*" : uri) + "::")
+            return s + localName
+        }
+    }
+
+    [DontInit]
+
+    [Extern]
+
+    final class Namespace
+    {
+        private var _prefix:?String
+
+        private var _uri:String
+
+        /**
+         * @useSignature Namespace():void
+         * @useSignature Namespace(uri:Namespace):void
+         * @useSignature Namespace(prefix:String, uri:Namespace):void
+         */
+        function Namespace(arg1:* = undefined, arg2:* = undefined)
+        {
+            if (!isUndefined(arg2))
+            {
+                _prefix = String(arg1)
+                if (!isXMLName(_prefix))
+                {
+                    _prefix = null
+                }
+                _uri = Namespace(arg2).uri
+            }
+            else if (!isUndefined(arg1))
+            {
+                _uri = Namespace(arg1).uri
+            }
+            else
+            {
+                _prefix = ""
+                _uri = ""
+            }
+
+            _uri ||= ""
+
+            if (!_uri.length)
+            {
+                if (_prefix)
+                {
+                    ErrorForms.throwError("xmlPrefixMustBeEmpty", "argumentError")
+                }
+                else
+                    _prefix = ""
+            }
+        }
+
+        function get prefix():String
+        {
+            return _prefix
+        }
+
+        function get uri():String
+        {
+            return _uri
+        }
+
+        override function toString():String uri
+    }
+
+    [DontInit]
+    [Extern]
+    final class XML
+    {
+        native proxy function getProperty(name:*):(XML,XMLList)
+
+        native proxy function setProperty(name:*, value:(XML,XMLList)):void
+
+        native proxy function deleteProperty(name:*):Boolean
+
+        native proxy function getAttribute(name:*):String
+
+        native proxy function setAttribute(name:*, value:String):void
+
+        native proxy function deleteAttribute(name:*):Boolean
+
+        native proxy function hasProperty(name:String):Boolean
+
+        native proxy function getDescendants(name:QName):XMLList
+
+        native proxy function filter(fn:function(XML):Boolean):XMLList
+
+        override native function toString():String
+    }
+
+    [DontInit]
+
+    [Extern]
+
+    final class XMLList
+    {
+        native proxy function getProperty(name:*):(XML,XMLList)
+
+        native proxy function setProperty(name:*, value:(XML,XMLList)):void
+
+        native proxy function deleteProperty(name:*):Boolean
+    }
+
+    [Extern]
+
+    final class XMLSettings
+    {
+        var ignoreComments = true
+
+        var ignoreProcessingInstructions = true
+
+        var ignoreWhitespace = true
+
+        var prettyPrinting = true
+
+        var prettyIndent:uint = 2
+    }
+}

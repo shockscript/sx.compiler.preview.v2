@@ -1,0 +1,74 @@
+package
+{
+    /**
+     * The Range data type represents a numeric range between two numbers.
+     */
+
+    [Primitive]
+
+    [DontInit]
+
+    [Where("N", defaultType="Number")]
+
+    [Where("N", numeric=true)]
+
+    [FFI]
+
+    final class Range.<N>
+    {
+        const from:N
+
+        const to:N
+
+        const step:N
+
+        /**
+         * Indicates whether `to` is inclusive.
+         */
+        const inclusive:Boolean
+
+        private const _stepIsNeg:Boolean
+
+        function Range(from:N, to:N, options:?RangeOptions.<N> = undefined)
+        {
+            this.from = from
+            this.to = to
+            this.step = options ? options.step : N(1)
+            this.inclusive = options ? options.inclusive : false
+            this._stepIsNeg = (options ? options.step : N(0)) < N(0)
+        }
+
+        proxy function hasProperty(a:N):Boolean
+        {
+            return a >= from && (inclusive ? a <= to : a < to)
+        }
+
+        native proxy function nextNameIndex(index:N):N
+
+        proxy function nextName(index:N):N
+        {
+            return proxy::nextValue(index)
+        }
+
+        native proxy function nextValue(index:N):N
+    }
+
+    [Primitive]
+
+    [Where("N", defaultType="Number")]
+
+    [Where("N", numeric=true)]
+
+    final class RangeOptions.<N>
+    {
+        /**
+         * Indicates whether the `to` value of a Range is inclusive.
+         */
+        const inclusive:Boolean
+
+        /**
+         * Indicates the decrement or increment value for Range iteration.
+         */
+        const step:N
+    }
+}

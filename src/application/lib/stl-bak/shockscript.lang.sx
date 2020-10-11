@@ -1,0 +1,52 @@
+package
+{
+    namespace toplevelNS = public
+
+    const Infinity = 1/0
+
+    const NaN = 0/0
+
+    const undefined = void 0
+
+    native function trace(...arguments:*):void
+
+    /**
+     * @throws AssertionError
+     */
+    native function assert(...arguments:*):void
+
+    native function parseFloat(str:String):Number
+
+    native function parseInt(str:String, radix:Number = NaN):int
+
+    native function encodeURI(uri:String):String
+
+    native function decodeURI(uri:String):String
+
+    native function encodeURIComponent(uri:String):String
+
+    native function decodeURIComponent(uri:String):String
+
+    function isFinite(num:Number):Boolean
+    {
+        return num != -Infinity && num != Infinity
+    }
+
+    function isNaN(num:Number):Boolean
+    {
+        return num == NaN
+    }
+
+    /**
+     * Verifies if value holds <code>undefined</code> or <code>null</code>.
+     */
+    function isUndefined(value:*):Boolean
+    {
+        return value === null || value === undefined
+    }
+
+    function range(from:Number, to:Number = Infinity, options:?RangeOptions.<Number> = undefined):Range.<Number>
+    {
+        return Range.<Number>(from, to, options)
+    }
+}
